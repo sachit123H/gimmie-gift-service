@@ -108,7 +108,7 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
 
             # IMPROVEMENT: Rule D: Relationship Boost (+2)
             for r_tag in rel_tags:
-                if r_tag in p_tags:
+                if r_tag in p_tags or r_tag in p_title:
                     score += 2
                     reasons.append(f"Fits relationship ({profile.relationship})")
                     break
