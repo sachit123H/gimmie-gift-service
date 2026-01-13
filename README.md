@@ -16,7 +16,7 @@ A production-ready backend service that ingests product data, allows searching/f
 * **Framework:** FastAPI (High performance, easy documentation)
 * **Database:** PostgreSQL
 * **ORM:** SQLAlchemy
-* **Validation:** Pydantic
+* **Architecture:** Service Layer Pattern with Pydantic Validation
 
 ## ⚙️ Setup Instructions
 
@@ -59,17 +59,12 @@ The `/recommendations` endpoint uses a weighted scoring system:
 1.  **Hard Filter:** Eliminates products above the `budget`.
 2.  **Interest Scoring (+10 pts):** Checks if any of the user's `interests` appear in the product tags, title, or description.
 3.  **Occasion Scoring (+5 pts):** Checks for keywords relevant to the occasion (e.g., "Birthday" -> checks for "party", "fun").
-4.  **Learning Layer Boost (+3 pts):** Queries the `events` table to find the top 3 most popular categories globally. Any product in these trending categories receives a boost, ensuring the system "learns" from user engagement.
+4.  **Learning Layer Boost (+3 pts):** Queries the `events` table to find the top 3 most popular categories globally.
+    * *Cold Start Strategy:* If no events exist, this boost is simply skipped, ensuring the system works immediately upon deployment.
 5.  **Sorting:** Products are returned in descending order of their total score.
 
-### Search Relevance
-When `sort=relevance` is used, results are ranked by where the keyword appears:
-* **Title Match:** High priority (+3)
-* **Tag Match:** Medium priority (+2)
-* **Description Match:** Low priority (+1)
-## 📈 Future Improvements
+## 📡 API Examples
 
-If given more time, I would improve:
-* **Hybrid Search:** Implement vector embeddings (PGVector) for semantic search instead of simple keyword matching.
-* **Caching:** Add Redis to cache search results for faster performance.
-* **Authentication:** specific User IDs using JWT tokens instead of passing strings.
+**Search for Tech products under $50:**
+```bash
+GET /search?category=Tech&maxPrice=50
