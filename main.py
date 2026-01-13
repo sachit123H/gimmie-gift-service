@@ -87,11 +87,20 @@ def log_event(event: schemas.EventRequest, db: Session = Depends(get_db)):
     new_event = models.Event(
         user_id=event.user_id,
         product_id=event.product_id,
-        event_type=event.event_type.value 
+        event_type=event.event_type.value
     )
     db.add(new_event)
     db.commit()
+
+    # Lightweight observability log (safe, non-intrusive)
+    print(
+        f"[EVENT] type={event.event_type.value} "
+        f"user={event.user_id} "
+        f"product={event.product_id}"
+    )
+
     return {"message": "Event logged successfully"}
+
 
 @app.get("/recommendations/diagnostics")
 def get_diagnostics(user_id: Optional[str] = None, db: Session = Depends(get_db)):
