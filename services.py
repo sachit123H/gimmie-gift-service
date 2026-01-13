@@ -34,79 +34,107 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
     Core Recommendation Engine Logic.
     Applies Hard Filters (SQL) -> Scoring (Python) -> Learning Boost.
     """
-    # 1. Hard Filter: Budget & Interests (SQL Optimization)
-    query = db.query(models.Product).filter(models.Product.price <= profile.budget)
-    
-    filters = []
-    # Interest Matching
-    for interest in profile.interests:
-        term = f"%{interest}%"
-        filters.append(models.Product.title.ilike(term))
-        filters.append(models.Product.tags.ilike(term))
-    
-    # Occasion Matching (Keywords)
-    occasion_keywords = {
-        "birthday": ["party", "fun", "gift"],
-        "anniversary": ["love", "romantic", "luxury"],
-        "wedding": ["home", "kitchen", "decor"],
-    }
-    relevant_keywords = occasion_keywords.get(profile.occasion.lower(), [])
-    for kw in relevant_keywords:
-        term = f"%{kw}%"
-        filters.append(models.Product.tags.ilike(term))
-        filters.append(models.Product.title.ilike(term))
+    try:
+        # 1. Hard Filter: Budget & Interests (SQL Optimization)
+        query = db.query(models.Product).filter(models.Product.price <= profile.budget)
         
-    if filters:
-        query = query.filter(or_(*filters))
-        
-    products = query.all()
-    
-    # 2. Fetch Trending Categories (Learning Layer)
-    top_categories = get_top_categories(db)
-
-    # 3. Weighted Scoring
-    scored_products = []
-    for p in products:
-        score = 0
-        reasons = []
-        p_tags = p.tags.lower() if p.tags else ""
-        p_title = p.title.lower()
-
-        # Rule A: Interests (+10)
+        filters = []
+        # Interest Matching
         for interest in profile.interests:
-            if interest.lower() in p_tags or interest.lower() in p_title:
-                score += 10
-                if f"Matches interest: {interest}" not in reasons:
-                    reasons.append(f"Matches interest: {interest}")
-
-        # Rule B: Occasion (+5)
-        for kw in relevant_keywords:
-            if kw in p_tags or kw in p_title:
-                score += 5
-                reasons.append(f"Great for {profile.occasion}")
-                break 
-
-        # Rule C: Learning Layer Boost (+3)
-        if p.category in top_categories:
-            score += 3
-            reasons.append("Trending category")
-
-        scored_products.append({
-            "product": p,
-            "score": score,
-            "reason": "; ".join(reasons) if reasons else "Fits within budget"
-        })
-
-    scored_products.sort(key=lambda x: x["score"], reverse=True)
-    
-    return [
-        {
-            "id": item["product"].id, 
-            "title": item["product"].title, 
-            "price": item["product"].price, 
-            "score": item["score"], 
-            "reason": item["reason"], 
-            "image_url": item["product"].image_url
+            term = f"%{interest}%"
+            filters.append(models.Product.title.ilike(term))
+            filters.append(models.Product.tags.ilike(term))
+        
+        # Occasion Matching (Keywords)
+        occasion_keywords = {
+            "birthday": ["party", "fun", "gift"],
+            "anniversary": ["love", "romantic", "luxury"],
+            "wedding": ["home", "kitchen", "decor"],
         }
-        for item in scored_products[:10]
-    ]
+        relevant_keywords = occasion_keywords.get(profile.occasion.lower(), [])
+        for kw in relevant_keywords:
+            term = f"%{kw}%"
+            filters.append(models.Product.tags.ilike(term))
+            filters.append(models.Product.title.ilike(term))
+            
+        if filters:
+            query = query.filter(or_(*filters))
+            
+        products = query.all()
+        
+        # 2. Fetch Trending Categories (Learning Layer)
+        top_categories = get_top_categories(db)
+
+        # 3. Weighted Scoring
+        scored_products = []
+        
+        # IMPROVEMENT: Relationship Keyword Mapping
+        relationship_keywords = {
+            "parent": ["home", "relaxation", "wellness", "kitchen"],
+            "dad": ["home", "relaxation", "tech", "gadget"],
+            "mom": ["home", "relaxation", "wellness", "beauty"],
+            "partner": ["luxury", "romantic", "perfume", "jewelry", "spa"],
+            "friend": ["fun", "gadget", "tech", "party"],
+            "child": ["toy", "game", "play", "fun"]
+        }
+        # Flatten relationship string to a key (simple heuristic)
+        rel_key = next((k for k in relationship_keywords if k in profile.relationship.lower()), None)
+        rel_tags = relationship_keywords.get(rel_key, [])
+
+        for p in products:
+            score = 0
+            reasons = []
+            p_tags = p.tags.lower() if p.tags else ""
+            p_title = p.title.lower()
+
+            # Rule A: Interests (+10)
+            for interest in profile.interests:
+                if interest.lower() in p_tags or interest.lower() in p_title:
+                    score += 10
+                    if f"Matches interest: {interest}" not in reasons:
+                        reasons.append(f"Matches interest: {interest}")
+
+            # Rule B: Occasion (+5)
+            for kw in relevant_keywords:
+                if kw in p_tags or kw in p_title:
+                    score += 5
+                    reasons.append(f"Great for {profile.occasion}")
+                    break 
+
+            # Rule C: Learning Layer Boost (+3)
+            if p.category in top_categories:
+                score += 3
+                reasons.append("Trending category")
+
+            # IMPROVEMENT: Rule D: Relationship Boost (+2)
+            for r_tag in rel_tags:
+                if r_tag in p_tags:
+                    score += 2
+                    reasons.append(f"Fits relationship ({profile.relationship})")
+                    break
+
+            scored_products.append({
+                "product": p,
+                "score": score,
+                "reason": "; ".join(reasons) if reasons else "Fits within budget"
+            })
+
+        scored_products.sort(key=lambda x: x["score"], reverse=True)
+        
+        return [
+            {
+                "id": item["product"].id, 
+                "title": item["product"].title, 
+                "price": item["product"].price, 
+                "score": item["score"], 
+                "reason": item["reason"], 
+                "image_url": item["product"].image_url
+            }
+            for item in scored_products[:10]
+        ]
+        
+    except SQLAlchemyError as e:
+        # IMPROVEMENT: Robust Error Handling
+        print(f"Recommendation Engine Error: {e}")
+        # Return empty list or handle gracefully instead of 500 Crash
+        return []

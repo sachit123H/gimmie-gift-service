@@ -6,7 +6,7 @@ A production-ready backend service that ingests product data, allows searching/f
 
 * **Product Ingestion:** Automatic seeding of 50+ products into PostgreSQL.
 * **Smart Search:** Filter by category, retailer, price, and text search (title/desc/tags).
-* **Recommendation Engine:** Weighted scoring algorithm (+10 for interest match, +5 for occasion match).
+* **Recommendation Engine:** Weighted scoring algorithm (+10 for interest match, +5 for occasion match, +2 for relationship).
 * **Event Tracking:** Logs user interactions (clicks/views) to build a "learning" dataset for future personalization.
 * **API Documentation:** Fully interactive Swagger UI.
 
@@ -54,14 +54,14 @@ A production-ready backend service that ingests product data, allows searching/f
 
 ## 🧠 Ranking Logic
 
-The `/recommendations` endpoint uses a weighted scoring system:
+The `/recommendations` endpoint uses a multi-factor weighted scoring system:
 
 1.  **Hard Filter:** Eliminates products above the `budget`.
 2.  **Interest Scoring (+10 pts):** Checks if any of the user's `interests` appear in the product tags, title, or description.
-3.  **Occasion Scoring (+5 pts):** Checks for keywords relevant to the occasion (e.g., "Birthday" -> checks for "party", "fun").
-4.  **Learning Layer Boost (+3 pts):** Queries the `events` table to find the top 3 most popular categories globally.
-    * *Cold Start Strategy:* If no events exist, this boost is simply skipped, ensuring the system works immediately upon deployment.
-5.  **Sorting:** Products are returned in descending order of their total score.
+3.  **Occasion Scoring (+5 pts):** Contextual boost for keywords relevant to the occasion (e.g., "Birthday" -> "party", "fun").
+4.  **Relationship Context (+2 pts):** Heuristic boost based on relationship type (e.g., "Parent" -> "home", "wellness").
+5.  **Learning Layer Boost (+3 pts):** Queries the `events` table to find the top 3 most popular categories globally.
+    * *Cold Start Strategy:* The system is designed to handle the "cold start" problem gracefully. If no event data exists (fresh install), the learning boost is simply skipped, relying on the core interest/occasion logic until data is gathered.
 
 ## 📡 API Examples
 
