@@ -1,24 +1,35 @@
 from fastapi import FastAPI, Depends, Query
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import Optional
 from database import engine, get_db
 import models
-import schemas  # IMPROVEMENT: Imported schemas
-import services # IMPROVEMENT: Imported service layer
+import schemas
+import services
 
-# Create tables
+# 1. Create database tables
 models.Base.metadata.create_all(bind=engine)
 
+# 2. Initialize the FastAPI app (ONCE)
 app = FastAPI(title="Gimmie AI Gift Service")
 
-# --- Endpoints ---
+# 3. Mount Static Files for the UI
+# This tells FastAPI to look in the "static" folder for files when "/static" is requested
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 4. Serve the Dashboard HTML
+@app.get("/dashboard")
+async def read_dashboard():
+    return FileResponse('static/index.html')
+
+# --- API Endpoints ---
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Gift Recommendation Service"}
 
-# IMPROVEMENT: Added Health Check endpoint (Production Best Practice)
 @app.get("/health")
 def health_check():
     """Simple health check for load balancers/uptime monitors."""
@@ -36,7 +47,7 @@ def search_products(
 ):
     query = db.query(models.Product)
     
-    # Filtering logic (Simple enough to keep in controller or move to service)
+    # Filtering logic
     if q:
         search_term = f"%{q}%"
         query = query.filter(or_(
@@ -61,14 +72,14 @@ def search_products(
     elif sort == "price_desc":
         results.sort(key=lambda x: x.price, reverse=True)
     elif sort == "relevance" and q:
-        # IMPROVEMENT: Use logic from service layer
+        # Uses the scoring logic from services.py
         results.sort(key=lambda x: services.get_relevance_score(x, q), reverse=True)
 
     return results
 
 @app.post("/recommendations")
 def get_recommendations(profile: schemas.RecommendationRequest, db: Session = Depends(get_db)):
-    # IMPROVEMENT: Logic delegated to service layer
+    # Delegates complex logic to the service layer
     return services.get_recommendations(profile, db)
 
 @app.post("/events")
@@ -76,7 +87,7 @@ def log_event(event: schemas.EventRequest, db: Session = Depends(get_db)):
     new_event = models.Event(
         user_id=event.user_id,
         product_id=event.product_id,
-        event_type=event.event_type.value # IMPROVEMENT: Extract string from Enum
+        event_type=event.event_type.value 
     )
     db.add(new_event)
     db.commit()

@@ -107,6 +107,7 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
                 reasons.append("Trending category")
 
             # IMPROVEMENT: Rule D: Relationship Boost (+2)
+            # (Logic updated to check Title OR Tags)
             for r_tag in rel_tags:
                 if r_tag in p_tags or r_tag in p_title:
                     score += 2
@@ -128,7 +129,8 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
                 "price": item["product"].price, 
                 "score": item["score"], 
                 "reason": item["reason"], 
-                "image_url": item["product"].image_url
+                "image_url": item["product"].image_url,
+                "url": item["product"].url  # <--- FIXED: Added URL field so dashboard links work
             }
             for item in scored_products[:10]
         ]

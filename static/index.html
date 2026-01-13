@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gimmie Gift Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f5f5f7; }
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #333; }
+        input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { background: #007AFF; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .results { margin-top: 15px; max-height: 400px; overflow-y: auto; }
+        .product-item { display: flex; align-items: start; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
+        .product-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; background: #eee; }
+        .product-info { flex: 1; }
+        .product-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .product-meta { font-size: 12px; color: #666; margin-bottom: 4px; }
+        .product-score { color: #e67e22; font-weight: bold; font-size: 12px; }
+        .reason { font-size: 11px; color: #27ae60; background: #eafaf1; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>🎁 Gimmie Gift Service</h1>
+    
+    <div class="container">
+        <div class="card">
+            <h2>🔎 Search Products</h2>
+            <input type="text" id="searchQuery" placeholder="Search (e.g., 'headphones')...">
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="maxPrice" placeholder="Max Price ($)">
+                <select id="category">
+                    <option value="">All Categories</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Beauty">Beauty</option>
+                    <option value="Home">Home</option>
+                    <option value="Toys">Toys</option>
+                </select>
+            </div>
+            <button onclick="searchProducts()">Find Gifts</button>
+            <div id="searchResults" class="results"></div>
+        </div>
+
+        <div class="card">
+            <h2>✨ Get Recommendations</h2>
+            <input type="text" id="recInterests" placeholder="Interests (comma separated, e.g., music, yoga)">
+            <div style="display: flex; gap: 10px;">
+                <select id="recOccasion">
+                    <option value="Birthday">Birthday</option>
+                    <option value="Anniversary">Anniversary</option>
+                    <option value="Wedding">Wedding</option>
+                </select>
+                <select id="recRelationship">
+                    <option value="Friend">Friend</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Parent">Parent</option>
+                    <option value="Sibling">Sibling</option>
+                </select>
+            </div>
+            <input type="number" id="recBudget" value="100" placeholder="Budget ($)">
+            <button onclick="getRecommendations()">Get Best Picks</button>
+            <div id="recResults" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const USER_ID = "web-user-" + Math.random().toString(36).substr(2, 9); // Simple random ID
+
+        // --- SEARCH LOGIC ---
+        async function searchProducts() {
+            const q = document.getElementById('searchQuery').value;
+            const cat = document.getElementById('category').value;
+            const price = document.getElementById('maxPrice').value;
+            
+            let url = `/search?sort=relevance`;
+            if (q) url += `&q=${encodeURIComponent(q)}`;
+            if (cat) url += `&category=${cat}`;
+            if (price) url += `&maxPrice=${price}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            renderList(data, 'searchResults');
+        }
+
+        // --- RECOMMENDATION LOGIC ---
+        async function getRecommendations() {
+            const interests = document.getElementById('recInterests').value.split(',').map(s => s.trim());
+            const payload = {
+                recipient_age: 25, // Defaulting for UI simplicity
+                occasion: document.getElementById('recOccasion').value,
+                relationship: document.getElementById('recRelationship').value,
+                budget: parseFloat(document.getElementById('recBudget').value) || 1000,
+                interests: interests.length > 0 && interests[0] !== "" ? interests : ["general"]
+            };
+
+            const res = await fetch('/recommendations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            renderList(data, 'recResults', true);
+        }
+
+        // --- EVENT TRACKING (CLICK) ---
+        async function trackClick(productId, url) {
+            // 1. Log the event to backend
+            await fetch('/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: USER_ID,
+                    product_id: productId,
+                    event_type: "click_out"
+                })
+            });
+            
+            // 2. Open product link
+            window.open(url, '_blank');
+        }
+
+        // --- RENDER HELPER ---
+        function renderList(products, containerId, isRec = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (products.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">No products found.</p>';
+                return;
+            }
+
+            products.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <img src="${p.image_url || 'https://via.placeholder.com/60'}" alt="img">
+                    <div class="product-info">
+                        <div class="product-title">
+                            <a href="#" onclick="trackClick(${p.id}, '${p.url || '#'}'); return false;">
+                                ${p.title}
+                            </a>
+                        </div>
+                        <div class="product-meta">$${p.price} • ${p.category || 'Item'}</div>
+                        ${isRec ? `<div class="product-score">Score: ${p.score}</div>` : ''}
+                        ${isRec && p.reason ? `<div class="reason">${p.reason}</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
