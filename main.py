@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func, desc
+from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional, List
 from pydantic import BaseModel
 from database import engine, get_db
@@ -67,7 +68,6 @@ def search_products(
     elif sort == "price_desc":
         results.sort(key=lambda x: x.price, reverse=True)
     elif sort == "relevance" and q:
-        # CHANGED: Implemented Python-side relevance scoring
         # Title match = 3 pts, Tag match = 2 pts, Desc match = 1 pt
         def get_relevance_score(product):
             score = 0
@@ -83,13 +83,41 @@ def search_products(
 
 @app.post("/recommendations")
 def get_recommendations(profile: RecommendationRequest, db: Session = Depends(get_db)):
-    products = db.query(models.Product).filter(models.Product.price <= profile.budget).all()
+    # OPTIMIZATION: Instead of fetching ALL products <= budget, 
+    # we filter in SQL for items that match at least ONE interest or the Occasion.
+    # This prevents loading unrelated items into memory.
     
-    # CHANGED: Learning Layer - Fetch top 3 categories from events
+    query = db.query(models.Product).filter(models.Product.price <= profile.budget)
+    
+    filters = []
+    
+    # SQL Filter for Interests
+    for interest in profile.interests:
+        term = f"%{interest}%"
+        filters.append(models.Product.title.ilike(term))
+        filters.append(models.Product.tags.ilike(term))
+        
+    # SQL Filter for Occasion (add common keywords)
+    occasion_keywords = {
+        "birthday": ["party", "fun", "gift"],
+        "anniversary": ["love", "romantic", "luxury"],
+        "wedding": ["home", "kitchen", "decor"],
+    }
+    relevant_keywords = occasion_keywords.get(profile.occasion.lower(), [])
+    for kw in relevant_keywords:
+        term = f"%{kw}%"
+        filters.append(models.Product.tags.ilike(term))
+        filters.append(models.Product.title.ilike(term))
+        
+    # Apply the OR filter if we have any criteria
+    if filters:
+        query = query.filter(or_(*filters))
+        
+    products = query.all()
+    
+    # LEARNING LAYER
     top_categories = []
     try:
-        # Count occurrences of categories in the events table
-        # We join Event -> Product to get the category
         category_stats = (
             db.query(models.Product.category, func.count(models.Event.id))
             .join(models.Event, models.Event.product_id == models.Product.id)
@@ -99,8 +127,9 @@ def get_recommendations(profile: RecommendationRequest, db: Session = Depends(ge
             .all()
         )
         top_categories = [cat for cat, count in category_stats]
-    except Exception:
-        # Fallback if no events exist yet
+    except SQLAlchemyError as e:
+        # Catch specific DB errors, log them, but don't crash the recommendation request
+        print(f"Learning Layer Error: {e}")
         top_categories = []
 
     scored_products = []
@@ -119,11 +148,7 @@ def get_recommendations(profile: RecommendationRequest, db: Session = Depends(ge
                     reasons.append(f"Matches interest: {interest}")
 
         # Rule B: Occasion (+5)
-        occasion_keywords = {
-            "birthday": ["party", "fun", "gift", "toy", "game", "happy"],
-            "anniversary": ["love", "romantic", "luxury", "spa", "wine"],
-            "wedding": ["home", "kitchen", "decor", "couple"],
-        }
+        # We re-check specific keywords here to apply the score accurately
         relevant = occasion_keywords.get(profile.occasion.lower(), [])
         for kw in relevant:
             if kw in p_tags or kw in p_title:
@@ -131,7 +156,7 @@ def get_recommendations(profile: RecommendationRequest, db: Session = Depends(ge
                 reasons.append(f"Great for {profile.occasion}")
                 break 
 
-        # CHANGED: Rule C: Learning Layer Boost (+3)
+        # Rule C: Learning Layer Boost (+3)
         if p.category in top_categories:
             score += 3
             reasons.append("Trending category")
@@ -146,13 +171,12 @@ def get_recommendations(profile: RecommendationRequest, db: Session = Depends(ge
     
     return [
         {"id": item["product"].id, "title": item["product"].title, "price": item["product"].price, 
-         "score": item["score"], "reason": item["reason"]}
+         "score": item["score"], "reason": item["reason"], "image_url": item["product"].image_url}
         for item in scored_products[:10]
     ]
 
 @app.post("/events")
 def log_event(event: EventRequest, db: Session = Depends(get_db)):
-    # Save the event to the database
     new_event = models.Event(
         user_id=event.user_id,
         product_id=event.product_id,
@@ -164,7 +188,6 @@ def log_event(event: EventRequest, db: Session = Depends(get_db)):
 
 @app.get("/recommendations/diagnostics")
 def get_diagnostics(user_id: Optional[str] = None, db: Session = Depends(get_db)):
-    # CHANGED: Updated to reflect real-time learning logic
     query = db.query(models.Event)
     if user_id:
         query = query.filter(models.Event.user_id == user_id)
@@ -173,7 +196,7 @@ def get_diagnostics(user_id: Optional[str] = None, db: Session = Depends(get_db)
     
     category_counts = {}
     for e in events:
-        if e.product: # Uses the new relationship
+        if e.product: 
             cat = e.product.category
             category_counts[cat] = category_counts.get(cat, 0) + 1
             
