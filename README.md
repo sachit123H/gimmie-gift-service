@@ -69,8 +69,8 @@ The `/recommendations` endpoint uses a multi-factor weighted scoring system:
 ```bash
 curl "http://127.0.0.1:8000/search?category=Tech&maxPrice=50"
 ```
-Get Recommendations:
-```
+**Get Recommendations:**
+```bash
 curl -X POST "http://127.0.0.1:8000/recommendations" \
      -H "Content-Type: application/json" \
      -d '{
