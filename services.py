@@ -35,6 +35,16 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
     Core Recommendation Engine Logic.
     Applies Hard Filters (SQL) -> Scoring (Python) -> Learning Boost.
     """
+
+    # ============================================================
+    # AI / EXPLANATION GENERATION STUB
+    # ============================================================
+    # NOTE: This section acts as a "Local Stub" for the AI requirement.
+    # Instead of making an expensive latency-heavy call to OpenAI, 
+    # we generate explanation text deterministically based on tags/rules.
+    # To swap for real AI, we would replace the string formatting below 
+    # with a call like: ai_service.generate_reason(product, profile)
+    # ============================================================
     try:
         # 1. Hard Filter: Budget & Interests (SQL Optimization)
         query = db.query(models.Product).filter(models.Product.price <= profile.budget)
@@ -102,13 +112,6 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
             reasons = []
             p_tags = p.tags.lower() if p.tags else ""
             p_title = p.title.lower()
-
-            # # Rule A: Interests (+10)
-            # for interest in profile.interests:
-            #     if interest.lower() in p_tags or interest.lower() in p_title:
-            #         score += 10
-            #         if f"Matches interest: {interest}" not in reasons:
-            #             reasons.append(f"Matches interest: {interest}")
 
             # Rule A: Interests (+10)
             for interest in profile.interests:
