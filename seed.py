@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 import models
 
-# 1. Create tables if they don't exist
+
 models.Base.metadata.create_all(bind=engine)
 
 def seed_data():
@@ -20,9 +20,7 @@ def seed_data():
     PLACEHOLDER_IMG = "https://via.placeholder.com/300"
 
     products_data = [
-        # ==========================================
-        # 🌟 HERO PRODUCTS (Real Images & Links)
-        # ==========================================
+        
         
         # --- TECH ---
         {
@@ -198,7 +196,7 @@ def seed_data():
         },
 
         # ==========================================
-        # 📦 IMPROVED FILLER PRODUCTS (Real Items)
+        # FILLER PRODUCTS 
         # ==========================================
         
         # --- MORE TECH ---

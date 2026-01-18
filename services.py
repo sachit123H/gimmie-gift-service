@@ -79,7 +79,7 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
         # 3. Weighted Scoring
         scored_products = []
         
-        # IMPROVEMENT: Relationship Keyword Mapping
+        
         relationship_keywords = {
             "parent": ["home", "relaxation", "wellness", "kitchen"],
             "dad": ["home", "relaxation", "tech", "gadget"],
@@ -115,7 +115,7 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
 
             # Rule A: Interests (+10)
             for interest in profile.interests:
-                # FIXED: Now checks if the interest matches the Title, Tags, OR Category
+                
                 p_desc = p.description.lower() if p.description else ""
                 p_category = p.category.lower() if p.category else ""
                 if (
@@ -144,8 +144,8 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
                 score += 3
                 reasons.append("This product is popular in a trending category.")
 
-            # IMPROVEMENT: Rule D: Relationship Boost (+2)
-            # (Logic updated to check Title OR Tags)
+            # Rule D: Relationship Boost (+2)
+            
             for r_tag in rel_tags:
                 if r_tag in p_tags or r_tag in p_title:
                     score += 2
@@ -169,13 +169,13 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
                 "score": item["score"], 
                 "reason": item["reason"], 
                 "image_url": item["product"].image_url,
-                "url": item["product"].url  # <--- FIXED: Added URL field so dashboard links work
+                "url": item["product"].url  
             }
             for item in scored_products[:10]
         ]
         
     except SQLAlchemyError as e:
-        # IMPROVEMENT: Robust Error Handling
+        
         print(f"Recommendation Engine Error: {e}")
         # Return empty list or handle gracefully instead of 500 Crash
         return []

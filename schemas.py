@@ -12,7 +12,7 @@ class RecommendationItem(BaseModel):
     image_url: str | None
     url: str | None
 
-# IMPROVEMENT: Enforce valid event types using an Enum
+
 class EventType(str, Enum):
     VIEW = "view_product"
     CLICK = "click_out"
@@ -28,4 +28,4 @@ class RecommendationRequest(BaseModel):
 class EventRequest(BaseModel):
     user_id: str
     product_id: int
-    event_type: EventType  # IMPROVEMENT: Uses Enum validation
+    event_type: EventType  

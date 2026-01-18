@@ -9,7 +9,7 @@ def test_read_root():
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to the Gift Recommendation Service"}
 
-# IMPROVEMENT: Added Health Check Test
+
 def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200

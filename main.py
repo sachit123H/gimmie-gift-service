@@ -9,17 +9,17 @@ import models
 import schemas
 import services
 
-# 1. Create database tables
+
 models.Base.metadata.create_all(bind=engine)
 
-# 2. Initialize the FastAPI app (ONCE)
+
 app = FastAPI(title="Gimmie AI Gift Service")
 
-# 3. Mount Static Files for the UI
+
 # This tells FastAPI to look in the "static" folder for files when "/static" is requested
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 4. Serve the Dashboard HTML
+
 @app.get("/dashboard")
 async def read_dashboard():
     return FileResponse('static/index.html')
