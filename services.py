@@ -19,6 +19,7 @@ def get_top_categories(db: Session, limit: int = 3):
         category_stats = (
             db.query(models.Product.category, func.count(models.Event.id))
             .join(models.Event, models.Event.product_id == models.Product.id)
+            .filter(models.Event.event_type == "click_out")
             .group_by(models.Product.category)
             .order_by(func.count(models.Event.id).desc())
             .limit(limit)
@@ -78,7 +79,22 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
             "child": ["toy", "game", "play", "fun"]
         }
         # Flatten relationship string to a key (simple heuristic)
-        rel_key = next((k for k in relationship_keywords if k in profile.relationship.lower()), None)
+        relationship_aliases = {
+            "parent": ["parent", "mother", "father", "mom", "dad"],
+            "partner": ["partner", "spouse", "wife", "husband"],
+            "friend": ["friend", "buddy"],
+            "child": ["child", "kid", "son", "daughter"],
+            "sibling": ["sibling", "brother", "sister"]
+        }
+
+        rel_key = None
+        rel_value = profile.relationship.lower()
+
+        for key, aliases in relationship_aliases.items():
+            if any(alias in rel_value for alias in aliases):
+                rel_key = key
+                break
+
         rel_tags = relationship_keywords.get(rel_key, [])
 
         for p in products:
@@ -87,13 +103,32 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
             p_tags = p.tags.lower() if p.tags else ""
             p_title = p.title.lower()
 
+            # # Rule A: Interests (+10)
+            # for interest in profile.interests:
+            #     if interest.lower() in p_tags or interest.lower() in p_title:
+            #         score += 10
+            #         if f"Matches interest: {interest}" not in reasons:
+            #             reasons.append(f"Matches interest: {interest}")
+
             # Rule A: Interests (+10)
             for interest in profile.interests:
-                if interest.lower() in p_tags or interest.lower() in p_title:
+                # FIXED: Now checks if the interest matches the Title, Tags, OR Category
+                p_desc = p.description.lower() if p.description else ""
+                p_category = p.category.lower() if p.category else ""
+                if (
+                    interest.lower() in p_tags or 
+                    interest.lower() in p_title or 
+                    interest.lower() in p_desc or
+                    interest.lower() == p_category
+                    ):
                     score += 10
                     if f"Matches interest: {interest}" not in reasons:
-                        reasons.append(f"Matches interest: {interest}")
+                        reasons.append(f"This product matches the interest '{interest}'.")
 
+            # Rule E: Age suitability (+1)
+            if profile.recipient_age < 12 and p.category == "Toys":
+                score += 1
+                reasons.append("Appropriate for the recipient’s age.")
             # Rule B: Occasion (+5)
             for kw in relevant_keywords:
                 if kw in p_tags or kw in p_title:
@@ -104,20 +139,21 @@ def get_recommendations(profile: schemas.RecommendationRequest, db: Session):
             # Rule C: Learning Layer Boost (+3)
             if p.category in top_categories:
                 score += 3
-                reasons.append("Trending category")
+                reasons.append("This product is popular in a trending category.")
 
             # IMPROVEMENT: Rule D: Relationship Boost (+2)
             # (Logic updated to check Title OR Tags)
             for r_tag in rel_tags:
                 if r_tag in p_tags or r_tag in p_title:
                     score += 2
-                    reasons.append(f"Fits relationship ({profile.relationship})")
+                    reasons.append(f"It is well-suited for a {profile.relationship.lower()}.")
                     break
 
             scored_products.append({
                 "product": p,
                 "score": score,
-                "reason": "; ".join(reasons) if reasons else "Fits within budget"
+                # Deduplicate reasons and use new default string if empty
+                "reason": " ".join(dict.fromkeys(reasons)) if reasons else "This product fits within the selected budget."
             })
 
         scored_products.sort(key=lambda x: x["score"], reverse=True)

@@ -8,11 +8,11 @@ models.Base.metadata.create_all(bind=engine)
 def seed_data():
     db: Session = SessionLocal()
 
-    # Check if data already exists
-    if db.query(models.Product).count() > 0:
-        print("Database already has data. Skipping seed.")
-        db.close()
-        return
+    # CLEAR old data so we can see new images
+    print("Clearing old data...")
+    db.query(models.Event).delete()   # Delete events first (foreign key)
+    db.query(models.Product).delete() # Delete products
+    db.commit()
 
     print("Seeding 50 products...")
 
@@ -20,65 +20,242 @@ def seed_data():
     PLACEHOLDER_IMG = "https://via.placeholder.com/300"
 
     products_data = [
+        # ==========================================
+        # 🌟 HERO PRODUCTS (Real Images & Links)
+        # ==========================================
+        
         # --- TECH ---
-        {"title": "Wireless Noise Cancelling Headphones", "description": "Premium over-ear headphones with 30-hour battery life.", "price": 299.99, "brand": "SoundMax", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/soundmax-headphones", "image_url": PLACEHOLDER_IMG, "tags": "audio,wireless,travel"},
-        {"title": "Smart Fitness Tracker Band", "description": "Tracks steps, heart rate, and sleep. Waterproof.", "price": 49.99, "brand": "FitLife", "category": "Tech", "retailer": "Target", "url": "https://target.com/fitlife-band", "image_url": PLACEHOLDER_IMG, "tags": "fitness,health,wearable"},
-        {"title": "4K Ultra HD Streaming Stick", "description": "Stream your favorite shows in brilliant 4K quality.", "price": 39.99, "brand": "StreamMaster", "category": "Tech", "retailer": "BestBuy", "url": "https://bestbuy.com/streammaster-4k", "image_url": PLACEHOLDER_IMG, "tags": "tv,streaming,entertainment"},
-        {"title": "Portable Bluetooth Speaker", "description": "Rugged, waterproof speaker with punchy bass.", "price": 89.00, "brand": "BoomBox", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/boombox-speaker", "image_url": PLACEHOLDER_IMG, "tags": "audio,outdoor,party"},
-        {"title": "Ergonomic Wireless Mouse", "description": "Vertical design to reduce wrist strain during work.", "price": 25.50, "brand": "ErgoTech", "category": "Tech", "retailer": "Walmart", "url": "https://walmart.com/ergotech-mouse", "image_url": PLACEHOLDER_IMG, "tags": "office,computer,ergonomic"},
-        {"title": "Mechanical Gaming Keyboard", "description": "RGB backlit keyboard with blue switches.", "price": 75.00, "brand": "GameZone", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/gamezone-keyboard", "image_url": PLACEHOLDER_IMG, "tags": "gaming,computer,rgb"},
-        {"title": "10000mAh Power Bank", "description": "Fast charging portable battery for phones and tablets.", "price": 22.99, "brand": "ChargeIt", "category": "Tech", "retailer": "Target", "url": "https://target.com/chargeit-bank", "image_url": PLACEHOLDER_IMG, "tags": "mobile,travel,accessory"},
-        {"title": "Smart Home Hub Mini", "description": "Control your lights and thermostat with voice.", "price": 35.00, "brand": "HomeSmart", "category": "Tech", "retailer": "BestBuy", "url": "https://bestbuy.com/homesmart-mini", "image_url": PLACEHOLDER_IMG, "tags": "smart home,voice,assistant"},
-        {"title": "Tablet Stand Adjustable", "description": "Aluminum stand for iPads and tablets.", "price": 18.99, "brand": "DeskMate", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/deskmate-stand", "image_url": PLACEHOLDER_IMG, "tags": "accessory,office,tablet"},
-        {"title": "USB-C Hub Adapter", "description": "Expand your laptop ports with HDMI, USB, and SD card.", "price": 45.00, "brand": "PortPlus", "category": "Tech", "retailer": "Walmart", "url": "https://walmart.com/portplus-hub", "image_url": PLACEHOLDER_IMG, "tags": "computer,accessory,work"},
+        {
+            "title": "Sony WH-1000XM5 Noise Canceling Headphones",
+            "description": "Industry-leading noise cancellation with 30-hour battery life and ultra-comfortable fit.",
+            "price": 348.00,
+            "brand": "Sony",
+            "category": "Tech",
+            "retailer": "Amazon",
+            "url": "https://electronics.sony.com/audio/headphones/headband/p/wh1000xm5-b",
+            "image_url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=60",
+            "tags": "audio,wireless,travel,music,premium"
+        },
+        {
+            "title": "Fujifilm Instax Mini 11 Instant Camera",
+            "description": "Capture memories instantly with this fun, easy-to-use camera. Built-in selfie lens and auto-exposure.",
+            "price": 76.00,
+            "brand": "Fujifilm",
+            "category": "Tech",
+            "retailer": "Target",
+            "url": "https://www.target.com/p/fujifilm-instax-mini-11-camera/-/A-78330000",
+            "image_url": "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=500&q=60",
+            "tags": "camera,photography,fun,travel,gift"
+        },
+        {
+            "title": "Apple Watch Series 9",
+            "description": "Advanced health sensors, fitness tracking, and safety features. Carbon neutral combination available.",
+            "price": 399.00,
+            "brand": "Apple",
+            "category": "Tech",
+            "retailer": "BestBuy",
+            "url": "https://www.bestbuy.com/site/apple-watch-series-9",
+            "image_url": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=60",
+            "tags": "wearable,fitness,health,smartwatch,apple"
+        },
+        {
+            "title": "Marshall Emberton Bluetooth Speaker",
+            "description": "Compact portable speaker with the loud and vibrant sound only Marshall can deliver. 20+ hours of playtime.",
+            "price": 169.99,
+            "brand": "Marshall",
+            "category": "Tech",
+            "retailer": "Amazon",
+            "url": "https://www.marshallheadphones.com/us/en/emberton-ii.html",
+            "image_url": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=500&q=60",
+            "tags": "audio,speaker,music,party,portable"
+        },
 
         # --- BEAUTY ---
-        {"title": "Hydrating Face Serum", "description": "Hyaluronic acid serum for glowing skin.", "price": 28.00, "brand": "GlowSkin", "category": "Beauty", "retailer": "Sephora", "url": "https://sephora.com/glowskin-serum", "image_url": PLACEHOLDER_IMG, "tags": "skincare,face,hydration"},
-        {"title": "Matte Lipstick Set", "description": "Set of 5 long-lasting matte lipsticks.", "price": 32.50, "brand": "LipLuxe", "category": "Beauty", "retailer": "Ulta", "url": "https://ulta.com/lipluxe-set", "image_url": PLACEHOLDER_IMG, "tags": "makeup,lips,gift set"},
-        {"title": "Organic Lavender Bath Bombs", "description": "Pack of 6 fizzy bath bombs for relaxation.", "price": 19.99, "brand": "PureBath", "category": "Beauty", "retailer": "Amazon", "url": "https://amazon.com/purebath-bombs", "image_url": PLACEHOLDER_IMG, "tags": "bath,relaxation,spa"},
-        {"title": "Vitamin C Daily Moisturizer", "description": "Brightens skin tone and reduces dark spots.", "price": 42.00, "brand": "Radiance", "category": "Beauty", "retailer": "Target", "url": "https://target.com/radiance-vitc", "image_url": PLACEHOLDER_IMG, "tags": "skincare,face,daily"},
-        {"title": "Professional Makeup Brush Set", "description": "12-piece synthetic brush set with travel case.", "price": 24.99, "brand": "BrushPro", "category": "Beauty", "retailer": "Amazon", "url": "https://amazon.com/brushpro-set", "image_url": PLACEHOLDER_IMG, "tags": "makeup,tools,travel"},
-        {"title": "Charcoal Detox Mask", "description": "Deep cleansing mask to remove impurities.", "price": 15.00, "brand": "ClearFace", "category": "Beauty", "retailer": "Ulta", "url": "https://ulta.com/clearface-mask", "image_url": PLACEHOLDER_IMG, "tags": "skincare,mask,detox"},
-        {"title": "Hair Repair Oil", "description": "Argan oil treatment for dry and damaged hair.", "price": 21.50, "brand": "SilkyHair", "category": "Beauty", "retailer": "Sephora", "url": "https://sephora.com/silkyhair-oil", "image_url": PLACEHOLDER_IMG, "tags": "haircare,repair,oil"},
-        {"title": "Rose Quartz Roller", "description": "Facial roller for reducing puffiness.", "price": 12.99, "brand": "SkinZen", "category": "Beauty", "retailer": "Amazon", "url": "https://amazon.com/skinzen-roller", "image_url": PLACEHOLDER_IMG, "tags": "skincare,tools,wellness"},
-        {"title": "Men's Grooming Kit", "description": "Includes beard oil, comb, and face wash.", "price": 35.00, "brand": "GentlemanCo", "category": "Beauty", "retailer": "Target", "url": "https://target.com/gentlemanco-kit", "image_url": PLACEHOLDER_IMG, "tags": "men,grooming,gift set"},
-        {"title": "Scented Soy Candle (Vanilla)", "description": "Hand-poured soy candle with 40h burn time.", "price": 18.00, "brand": "HomeScents", "category": "Beauty", "retailer": "Etsy", "url": "https://etsy.com/homescents-vanilla", "image_url": PLACEHOLDER_IMG, "tags": "home,fragrance,relaxation"},
+        {
+            "title": "Glow Recipe Watermelon Glow Niacinamide Dew Drops",
+            "description": "A breakthrough, multi-use highlighting serum that hydrates and visibly reduces the look of hyperpigmentation.",
+            "price": 35.00,
+            "brand": "Glow Recipe",
+            "category": "Beauty",
+            "retailer": "Sephora",
+            "url": "https://www.sephora.com/product/glow-recipe-watermelon-glow-niacinamide-dew-drops-P466123",
+            "image_url": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=500&q=60",
+            "tags": "skincare,glow,serum,hydration,trending"
+        },
+        {
+            "title": "Dyson Airwrap Multi-Styler",
+            "description": "Curl. Shape. Smooth and hide flyaways. With no extreme heat. Re-engineered attachments for faster styling.",
+            "price": 599.00,
+            "brand": "Dyson",
+            "category": "Beauty",
+            "retailer": "Ulta",
+            "url": "https://www.ulta.com/p/airwrap-multi-styler-pimprod2032688",
+            "image_url": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=500&q=60",
+            "tags": "hair,styling,luxury,tools,haircare"
+        },
+        {
+            "title": "Rare Beauty Soft Pinch Liquid Blush",
+            "description": "A weightless, long-lasting liquid blush that blends and builds beautifully for a soft, healthy flush.",
+            "price": 23.00,
+            "brand": "Rare Beauty",
+            "category": "Beauty",
+            "retailer": "Sephora",
+            "url": "https://www.sephora.com/product/rare-beauty-by-selena-gomez-soft-pinch-liquid-blush-P455739",
+            "image_url": "https://images.unsplash.com/photo-1515688594390-b649af70d282?auto=format&fit=crop&w=500&q=60",
+            "tags": "makeup,blush,face,viral,gift"
+        },
+        {
+            "title": "Laneige Lip Sleeping Mask",
+            "description": "A leave-on lip mask that delivers intense moisture and antioxidants while you sleep.",
+            "price": 24.00,
+            "brand": "Laneige",
+            "category": "Beauty",
+            "retailer": "Amazon",
+            "url": "https://us.laneige.com/products/lip-sleeping-mask",
+            "image_url": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=500&q=60",
+            "tags": "skincare,lips,mask,hydration,selfcare"
+        },
 
         # --- HOME ---
-        {"title": "Ceramic Plant Pot Set", "description": "Three minimal white pots with drainage holes.", "price": 29.99, "brand": "GreenThumb", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/greenthumb-pots", "image_url": PLACEHOLDER_IMG, "tags": "decor,plants,garden"},
-        {"title": "Soft Throw Blanket", "description": "Fleece blanket, 50x60 inches, navy blue.", "price": 24.50, "brand": "CozyHome", "category": "Home", "retailer": "Target", "url": "https://target.com/cozyhome-blanket", "image_url": PLACEHOLDER_IMG, "tags": "decor,comfort,winter"},
-        {"title": "Stainless Steel Water Bottle", "description": "Insulated bottle keeps drinks cold for 24h.", "price": 22.00, "brand": "HydroCool", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/hydrocool-bottle", "image_url": PLACEHOLDER_IMG, "tags": "travel,kitchen,eco-friendly"},
-        {"title": "Bamboo Cutting Board", "description": "Durable and eco-friendly kitchen chopping board.", "price": 16.99, "brand": "ChefChoice", "category": "Home", "retailer": "Walmart", "url": "https://walmart.com/chefchoice-board", "image_url": PLACEHOLDER_IMG, "tags": "kitchen,cooking,eco-friendly"},
-        {"title": "Digital Picture Frame", "description": "Share photos instantly via email to this frame.", "price": 89.99, "brand": "Memories", "category": "Home", "retailer": "BestBuy", "url": "https://bestbuy.com/memories-frame", "image_url": PLACEHOLDER_IMG, "tags": "decor,tech,family"},
-        {"title": "Essential Oil Diffuser", "description": "Ultrasonic aroma humidifier with LED lights.", "price": 27.99, "brand": "ZenSpace", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/zenspace-diffuser", "image_url": PLACEHOLDER_IMG, "tags": "wellness,decor,fragrance"},
-        {"title": "Coffee Maker (Single Serve)", "description": "Brew a fresh cup in under a minute.", "price": 49.99, "brand": "BrewMaster", "category": "Home", "retailer": "Target", "url": "https://target.com/brewmaster-single", "image_url": PLACEHOLDER_IMG, "tags": "kitchen,coffee,appliance"},
-        {"title": "Weighted Blanket (15lbs)", "description": "Promotes better sleep and reduces anxiety.", "price": 55.00, "brand": "SleepWell", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/sleepwell-weighted", "image_url": PLACEHOLDER_IMG, "tags": "bedding,wellness,sleep"},
-        {"title": "Set of 4 Wine Glasses", "description": "Elegant crystal glasses for red or white wine.", "price": 39.00, "brand": "Cheers", "category": "Home", "retailer": "Crate&Barrel", "url": "https://crateandbarrel.com/cheers-glasses", "image_url": PLACEHOLDER_IMG, "tags": "kitchen,dining,party"},
-        {"title": "Desk Lamp with USB Port", "description": "LED lamp with adjustable brightness and charging.", "price": 32.99, "brand": "BrightWork", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/brightwork-lamp", "image_url": PLACEHOLDER_IMG, "tags": "office,decor,lighting"},
+        {
+            "title": "Levitating Moon Lamp",
+            "description": "3D printed moon light that floats and spins automatically. 3 colors modes.",
+            "price": 99.99,
+            "brand": "Gingko",
+            "category": "Home",
+            "retailer": "Amazon",
+            "url": "https://www.amazon.com/Levitating-Moon-Lamp-Floating-Magnetic/dp/B07L32KG4Z",
+            "image_url": "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=500&q=60",
+            "tags": "decor,lighting,unique,cool,bedroom"
+        },
+        {
+            "title": "Nespresso Vertuo Plus Coffee Maker",
+            "description": "Single-serve coffee and espresso machine. Brews 4 cup sizes.",
+            "price": 149.00,
+            "brand": "Nespresso",
+            "category": "Home",
+            "retailer": "Williams Sonoma",
+            "url": "https://www.nespresso.com/us/en/order/machines/vertuo",
+            "image_url": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&w=500&q=60",
+            "tags": "kitchen,coffee,appliance,morning,gift"
+        },
+        {
+            "title": "Monstera Deliciosa (Swiss Cheese Plant)",
+            "description": "Live indoor plant in a ceramic pot. Easy to care for and purifies the air.",
+            "price": 45.00,
+            "brand": "The Sill",
+            "category": "Home",
+            "retailer": "The Sill",
+            "url": "https://www.thesill.com/products/monstera-deliciosa",
+            "image_url": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=500&q=60",
+            "tags": "plants,nature,decor,living room,wellness"
+        },
+        {
+            "title": "Diptyque Baies Scented Candle",
+            "description": "Luxurious candle with notes of blackcurrant leaves and Bulgarian roses.",
+            "price": 74.00,
+            "brand": "Diptyque",
+            "category": "Home",
+            "retailer": "Nordstrom",
+            "url": "https://www.diptyqueparis.com/en_us/p/baies-candle.html",
+            "image_url": "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=500&q=60",
+            "tags": "fragrance,candle,luxury,relax,home"
+        },
 
         # --- TOYS ---
-        {"title": "LEGO Starship Kit", "description": "Build your own space fighter. 500 pieces.", "price": 59.99, "brand": "BrickMaster", "category": "Toys", "retailer": "Target", "url": "https://target.com/brickmaster-starship", "image_url": PLACEHOLDER_IMG, "tags": "building,kids,creative"},
-        {"title": "Plush Teddy Bear", "description": "Super soft 12-inch bear. Hypoallergenic.", "price": 14.99, "brand": "CuddleFriends", "category": "Toys", "retailer": "Amazon", "url": "https://amazon.com/cuddlefriends-bear", "image_url": PLACEHOLDER_IMG, "tags": "plush,kids,soft"},
-        {"title": "Remote Control Car", "description": "High speed off-road racer with rechargeable battery.", "price": 45.00, "brand": "SpeedRacers", "category": "Toys", "retailer": "Walmart", "url": "https://walmart.com/speedracers-car", "image_url": PLACEHOLDER_IMG, "tags": "rc,outdoor,vehicle"},
-        {"title": "Board Game - Strategy", "description": "Conquer territories in this classic strategy game.", "price": 35.00, "brand": "GameNight", "category": "Toys", "retailer": "Amazon", "url": "https://amazon.com/gamenight-strategy", "image_url": PLACEHOLDER_IMG, "tags": "game,family,strategy"},
-        {"title": "Art Supplies Kit", "description": "Paints, brushes, and canvas for young artists.", "price": 28.99, "brand": "CreateIt", "category": "Toys", "retailer": "Michaels", "url": "https://michaels.com/createit-kit", "image_url": PLACEHOLDER_IMG, "tags": "creative,art,kids"},
-        {"title": "Science Experiment Set", "description": "20 fun chemistry experiments for kids.", "price": 22.50, "brand": "SciKid", "category": "Toys", "retailer": "Target", "url": "https://target.com/scikid-set", "image_url": PLACEHOLDER_IMG, "tags": "educational,science,stem"},
-        {"title": "Puzzle (1000 Piece)", "description": "Challenging landscape puzzle of the Alps.", "price": 18.00, "brand": "PuzzleMaster", "category": "Toys", "retailer": "Amazon", "url": "https://amazon.com/puzzlemaster-alps", "image_url": PLACEHOLDER_IMG, "tags": "puzzle,family,brain"},
-        {"title": "Action Figure Hero", "description": "Poseable superhero figure with accessories.", "price": 12.99, "brand": "HeroWorld", "category": "Toys", "retailer": "Walmart", "url": "https://walmart.com/heroworld-figure", "image_url": PLACEHOLDER_IMG, "tags": "action,kids,collectible"},
-        {"title": "Wooden Building Blocks", "description": "Classic set of 50 wooden blocks for toddlers.", "price": 25.00, "brand": "WoodWorks", "category": "Toys", "retailer": "Amazon", "url": "https://amazon.com/woodworks-blocks", "image_url": PLACEHOLDER_IMG, "tags": "toddler,building,educational"},
-        {"title": "Drone with Camera", "description": "Beginner drone with 720p HD camera.", "price": 65.00, "brand": "SkyFly", "category": "Toys", "retailer": "BestBuy", "url": "https://bestbuy.com/skyfly-drone", "image_url": PLACEHOLDER_IMG, "tags": "tech,outdoor,camera"},
+        {
+            "title": "LEGO Star Wars Millennium Falcon",
+            "description": "Build the iconic starship from Star Wars. 1351 pieces with 7 minifigures.",
+            "price": 169.99,
+            "brand": "LEGO",
+            "category": "Toys",
+            "retailer": "LEGO Store",
+            "url": "https://www.lego.com/en-us/product/millennium-falcon-75257",
+            "image_url": "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&w=500&q=60",
+            "tags": "lego,star wars,building,kids,collection"
+        },
+        {
+            "title": "Jellycat Bashful Beige Bunny",
+            "description": "The softest plush bunny with floppy ears. Suitable from birth.",
+            "price": 25.00,
+            "brand": "Jellycat",
+            "category": "Toys",
+            "retailer": "Amazon",
+            "url": "https://www.jellycat.com/us/bashful-beige-bunny-bas3b/",
+            "image_url": "https://cdn11.bigcommerce.com/s-23s5gfmhr7/images/stencil/1000w/products/294/41548/BAS3B__06287.1727975732.jpg?c=1",
+            "tags": "plush,soft,baby,kids,cute"
+        },
+        {
+            "title": "Magna-Tiles 100-Piece Set",
+            "description": "The original 3D magnetic building tiles. Fosters creativity and STEM learning.",
+            "price": 119.99,
+            "brand": "Magna-Tiles",
+            "category": "Toys",
+            "retailer": "Target",
+            "url": "https://www.target.com/p/magna-tiles-clear-colors-100pc-set/-/A-14264620",
+            "image_url": "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=60",
+            "tags": "educational,building,kids,stem,creative"
+        },
+
+        # ==========================================
+        # 📦 IMPROVED FILLER PRODUCTS (Real Items)
+        # ==========================================
         
-        # --- MISC ---
-        {"title": "Portable Hard Drive 1TB", "description": "Backup your files securely. USB 3.0.", "price": 55.00, "brand": "DataSafe", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/datasafe-1tb", "image_url": PLACEHOLDER_IMG, "tags": "storage,computer,work"},
-        {"title": "Video Doorbell", "description": "See who is at the door from your phone.", "price": 99.00, "brand": "SecureHome", "category": "Tech", "retailer": "HomeDepot", "url": "https://homedepot.com/securehome-bell", "image_url": PLACEHOLDER_IMG, "tags": "smart home,security,tech"},
-        {"title": "Yoga Mat Non-Slip", "description": "Extra thick mat for yoga and pilates.", "price": 22.00, "brand": "ZenFit", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/zenfit-mat", "image_url": PLACEHOLDER_IMG, "tags": "fitness,health,yoga"},
-        {"title": "Cookbook Stand", "description": "Holds your cookbook open while you cook.", "price": 14.50, "brand": "ChefHelper", "category": "Home", "retailer": "Target", "url": "https://target.com/chefhelper-stand", "image_url": PLACEHOLDER_IMG, "tags": "kitchen,cooking,accessory"},
-        {"title": "Kids Walkie Talkies", "description": "Long range communication for outdoor play.", "price": 29.99, "brand": "TalkTime", "category": "Toys", "retailer": "Walmart", "url": "https://walmart.com/talktime-walkie", "image_url": PLACEHOLDER_IMG, "tags": "outdoor,kids,communication"},
-        {"title": "Electric Toothbrush", "description": "Rechargeable brush with 2 minute timer.", "price": 39.99, "brand": "SmileBright", "category": "Beauty", "retailer": "Amazon", "url": "https://amazon.com/smilebright-electric", "image_url": PLACEHOLDER_IMG, "tags": "dental,health,daily"},
-        {"title": "Digital Alarm Clock", "description": "Large display with USB charging port.", "price": 19.99, "brand": "TimeKeeper", "category": "Home", "retailer": "Target", "url": "https://target.com/timekeeper-clock", "image_url": PLACEHOLDER_IMG, "tags": "bedroom,tech,clock"},
-        {"title": "Wireless Charging Pad", "description": "Qi-certified charger for iPhone and Android.", "price": 15.99, "brand": "ChargePad", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/chargepad-wireless", "image_url": PLACEHOLDER_IMG, "tags": "mobile,accessory,charging"},
-        {"title": "Travel Backpack", "description": "Lightweight water-resistant daypack.", "price": 45.00, "brand": "TravelGo", "category": "Home", "retailer": "REI", "url": "https://rei.com/travelgo-pack", "image_url": PLACEHOLDER_IMG, "tags": "travel,outdoor,bag"},
-        {"title": "Tea Sampler Box", "description": "Collection of 10 herbal and black teas.", "price": 21.00, "brand": "TeaTime", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/teatime-sampler", "image_url": PLACEHOLDER_IMG, "tags": "food,drink,gift set"},
+        # --- MORE TECH ---
+        # Fixed: Image link updated
+        {"title": "Fitbit Inspire 3 Fitness Tracker", "description": "Tracks steps, heart rate, and sleep with 10-day battery life.", "price": 99.95, "brand": "Fitbit", "category": "Tech", "retailer": "Target", "url": "https://target.com/p/fitbit-inspire-3", "image_url": "https://target.scene7.com/is/image/Target/GUEST_fc31fcf8-9cd0-4c74-9ea0-124b51378c04?qlt=85&fmt=webp&hei=500&wid=500", "tags": "fitness,health,wearable"},
+        {"title": "Roku Streaming Stick 4K", "description": "Stream your favorite shows in brilliant 4K quality with Dolby Vision.", "price": 49.99, "brand": "Roku", "category": "Tech", "retailer": "BestBuy", "url": "https://bestbuy.com/site/roku-streaming-stick-4k", "image_url": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=500&q=60", "tags": "tv,streaming,entertainment"},
+        {"title": "Logitech Lift Vertical Mouse", "description": "Ergonomic vertical design to reduce wrist strain during work.", "price": 69.99, "brand": "Logitech", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/logitech-lift-vertical", "image_url": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=500&q=60", "tags": "office,computer,ergonomic"},
+        # Fixed: Image link updated
+        {"title": "Keychron K2 Mechanical Keyboard", "description": "Wireless RGB mechanical keyboard for Mac and Windows.", "price": 79.99, "brand": "Keychron", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/keychron-k2", "image_url": "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=500&q=60", "tags": "gaming,computer,rgb"},
+        {"title": "Anker 737 Power Bank", "description": "24,000mAh ultra-fast portable charger for laptops and phones.", "price": 149.99, "brand": "Anker", "category": "Tech", "retailer": "Anker", "url": "https://www.anker.com/products/a1289", "image_url": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=500&q=60", "tags": "mobile,travel,accessory"},
+        {"title": "Google Nest Audio", "description": "Smart speaker with room-filling sound and Google Assistant.", "price": 99.99, "brand": "Google", "category": "Tech", "retailer": "BestBuy", "url": "https://store.google.com/product/nest_audio", "image_url": "https://images.unsplash.com/photo-1589492477829-5e65395b66cc?auto=format&fit=crop&w=500&q=60", "tags": "smart home,voice,assistant"},
+        {"title": "Lamicall Tablet Stand", "description": "Adjustable aluminum stand for iPad, Galaxy Tab, and Kindle.", "price": 19.99, "brand": "Lamicall", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/lamicall-tablet-stand", "image_url": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=500&q=60", "tags": "accessory,office,tablet"},
+        {"title": "Anker USB-C Hub", "description": "Expand your laptop with HDMI, USB 3.0, and SD card slots.", "price": 39.99, "brand": "Anker", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/anker-usb-c-hub", "image_url": "https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=500&q=60", "tags": "computer,accessory,work"},
+        # Fixed: Image link updated
+        {"title": "Seagate Portable 2TB HDD", "description": "Reliable external storage for backing up your files.", "price": 62.99, "brand": "Seagate", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/seagate-portable", "image_url": "https://images.unsplash.com/photo-1597852074816-d933c7d2b988?auto=format&fit=crop&w=500&q=60", "tags": "storage,computer,work"},
+        # Fixed: Image link updated
+        {"title": "Ring Video Doorbell", "description": "1080p HD video doorbell with enhanced motion detection.", "price": 99.99, "brand": "Ring", "category": "Tech", "retailer": "Amazon", "url": "https://amazon.com/ring-video-doorbell", "image_url": "https://m.media-amazon.com/images/I/61-UAVvjGsL._AC_UY327_FMwebp_QL65_.jpg", "tags": "smart home,security,tech"},
+
+        # --- MORE BEAUTY ---
+        {"title": "MAC Matte Lipstick", "description": "The iconic matte lipstick with rich color and no shine.", "price": 23.00, "brand": "MAC", "category": "Beauty", "retailer": "Ulta", "url": "https://ulta.com/mac-matte-lipstick", "image_url": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=500&q=60", "tags": "makeup,lips,gift set"},
+        {"title": "Da Bomb Bath Fizzers", "description": "Handmade bath bombs with a surprise inside.", "price": 7.50, "brand": "Da Bomb", "category": "Beauty", "retailer": "Target", "url": "https://target.com/da-bomb", "image_url": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=500&q=60", "tags": "bath,relaxation,spa"},
+        # Fixed: Image link updated
+        {"title": "CeraVe Daily Moisturizing Lotion", "description": "Lightweight oil-free moisturizer with hyaluronic acid.", "price": 14.99, "brand": "CeraVe", "category": "Beauty", "retailer": "Target", "url": "https://target.com/cerave-lotion", "image_url": "https://target.scene7.com/is/image/Target/GUEST_5876066f-6cd4-41c1-b2d9-58ba0461f7ee?qlt=85&fmt=webp&hei=500&wid=500", "tags": "skincare,face,daily"},
+        # Fixed: Image link updated
+        {"title": "Real Techniques Brush Set", "description": "Everyday Essentials makeup brush set with sponge.", "price": 19.99, "brand": "Real Techniques", "category": "Beauty", "retailer": "Ulta", "url": "https://ulta.com/real-techniques-set", "image_url": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=500&q=60", "tags": "makeup,tools,travel"},
+        {"title": "Origins Clear Improvement Mask", "description": "Active charcoal mask to clear pores.", "price": 29.00, "brand": "Origins", "category": "Beauty", "retailer": "Sephora", "url": "https://sephora.com/origins-mask", "image_url": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=500&q=60", "tags": "skincare,mask,detox"},
+        {"title": "Moroccanoil Treatment", "description": "Argan oil hair treatment for conditioning and styling.", "price": 48.00, "brand": "Moroccanoil", "category": "Beauty", "retailer": "Sephora", "url": "https://sephora.com/moroccanoil", "image_url": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=500&q=60", "tags": "haircare,repair,oil"},
+        {"title": "Herbivore Jade Roller", "description": "Facial roller for reducing puffiness and tension.", "price": 30.00, "brand": "Herbivore", "category": "Beauty", "retailer": "Sephora", "url": "https://sephora.com/herbivore-roller", "image_url": "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=500&q=60", "tags": "skincare,tools,wellness"},
+        {"title": "Harry's Men's Shave Set", "description": "Quality razor handle, blades, and shave gel.", "price": 25.00, "brand": "Harry's", "category": "Beauty", "retailer": "Target", "url": "https://target.com/harrys-set", "image_url": "https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=500&q=60", "tags": "men,grooming,gift set"},
+
+        # --- MORE HOME ---
+        {"title": "West Elm Ceramic Planters", "description": "Modern mid-century ceramic planters.", "price": 30.00, "brand": "West Elm", "category": "Home", "retailer": "West Elm", "url": "https://westelm.com/products/planters", "image_url": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=500&q=60", "tags": "decor,plants,garden"},
+        # Fixed: Image link updated
+        {"title": "Bearaby Cotton Napper", "description": "Chunky knit weighted blanket made of organic cotton.", "price": 249.00, "brand": "Bearaby", "category": "Home", "retailer": "Bearaby", "url": "https://bearaby.com", "image_url": "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=500&q=60", "tags": "decor,comfort,winter"},
+        # Fixed: Image link updated
+        {"title": "Hydro Flask Wide Mouth", "description": "32 oz insulated stainless steel water bottle.", "price": 44.95, "brand": "Hydro Flask", "category": "Home", "retailer": "Amazon", "url": "https://amazon.com/hydroflask", "image_url": "https://m.media-amazon.com/images/I/51yfoQ8M9nL._AC_SY300_SX300_QL70_FMwebp_.jpg", "tags": "travel,kitchen,eco-friendly"},
+        {"title": "Material Kitchen ReBoard", "description": "Recycled plastic and sugarcane cutting board.", "price": 35.00, "brand": "Material", "category": "Home", "retailer": "Material Kitchen", "url": "https://materialkitchen.com", "image_url": "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=500&q=60", "tags": "kitchen,cooking,eco-friendly"},
+        # Fixed: Image link updated
+        {"title": "Aura Carver Digital Frame", "description": "Smart digital picture frame with unlimited photo storage.", "price": 149.00, "brand": "Aura", "category": "Home", "retailer": "Amazon", "url": "https://auraframes.com", "image_url": "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=500&q=60", "tags": "decor,tech,family"},
+        # Fixed: Image link updated
+        {"title": "Vitruvi Stone Diffuser", "description": "Ceramic ultrasonic essential oil diffuser.", "price": 123.00, "brand": "Vitruvi", "category": "Home", "retailer": "Vitruvi", "url": "https://vitruvi.com", "image_url": "https://vitruvi.com/cdn/shop/files/pdp_stone-diffuser_front_white_gallery_1_v9_image.png?v=1759291810&width=1100", "tags": "wellness,decor,fragrance"},
+        # Fixed: Image link updated
+        {"title": "Gravity Weighted Blanket", "description": "The original weighted blanket for sleep and stress.", "price": 195.00, "brand": "Gravity", "category": "Home", "retailer": "Gravity", "url": "https://gravityblankets.com", "image_url": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=500&q=60", "tags": "bedding,wellness,sleep"},
+        {"title": "Crate & Barrel Wine Glasses", "description": "Contemporary red wine glasses, set of 4.", "price": 59.95, "brand": "Crate & Barrel", "category": "Home", "retailer": "Crate & Barrel", "url": "https://crateandbarrel.com", "image_url": "https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=500&q=60", "tags": "kitchen,dining,party"},
+        # Fixed: Image link updated
+        {"title": "West Elm Industrial Task Lamp", "description": "Adjustable table lamp with USB charging.", "price": 159.00, "brand": "West Elm", "category": "Home", "retailer": "West Elm", "url": "https://westelm.com", "image_url": "https://assets.weimgs.com/weimgs/rk/images/wcm/products/202543/0015/industrial-outline-table-lamp-27-xl.jpg"},
+
+        # --- MORE TOYS ---
+        {"title": "Traxxas Rustler RC Car", "description": "High-performance off-road RC truck.", "price": 199.95, "brand": "Traxxas", "category": "Toys", "retailer": "Amazon", "url": "https://traxxas.com", "image_url": "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=500&q=60", "tags": "rc,outdoor,vehicle"},
+        # Fixed: Image link updated
+        {"title": "Catan Board Game", "description": "Trade, build, and settle in this classic strategy game.", "price": 44.00, "brand": "Catan Studio", "category": "Toys", "retailer": "Target", "url": "https://target.com/catan", "image_url": "https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?auto=format&fit=crop&w=500&q=60", "tags": "game,family,strategy"},
+        {"title": "Crayola Inspiration Art Case", "description": "140-piece art set with crayons, pencils, and markers.", "price": 24.99, "brand": "Crayola", "category": "Toys", "retailer": "Amazon", "url": "https://crayola.com", "image_url": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=500&q=60", "tags": "creative,art,kids"},
+        {"title": "National Geographic Science Kit", "description": "Earth science kit with crystals and tornados.", "price": 29.99, "brand": "National Geographic", "category": "Toys", "retailer": "Amazon", "url": "https://amazon.com/nat-geo", "image_url": "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=500&q=60", "tags": "educational,science,stem"},
+        {"title": "Ravensburger Puzzle (1000pc)", "description": "High-quality landscape puzzle.", "price": 25.00, "brand": "Ravensburger", "category": "Toys", "retailer": "Amazon", "url": "https://ravensburger.org", "image_url": "https://images.unsplash.com/photo-1587586062323-836089e60d52?auto=format&fit=crop&w=500&q=60", "tags": "puzzle,family,brain"},
+        {"title": "Marvel Legends Action Figure", "description": "6-inch collectible Spider-Man figure.", "price": 24.99, "brand": "Hasbro", "category": "Toys", "retailer": "Target", "url": "https://hasbro.com", "image_url": "https://images.unsplash.com/photo-1608354580875-30bd4168b351?auto=format&fit=crop&w=500&q=60", "tags": "action,kids,collectible"},
+        {"title": "Melissa & Doug Wooden Blocks", "description": "Solid wood building blocks set.", "price": 23.99, "brand": "Melissa & Doug", "category": "Toys", "retailer": "Amazon", "url": "https://melissaanddoug.com", "image_url": "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=60", "tags": "toddler,building,educational"},
+        {"title": "DJI Mini 2 SE Drone", "description": "Lightweight camera drone with QHD video.", "price": 299.00, "brand": "DJI", "category": "Toys", "retailer": "BestBuy", "url": "https://dji.com", "image_url": "https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?auto=format&fit=crop&w=500&q=60", "tags": "tech,outdoor,camera"},
     ]
 
     for p in products_data:

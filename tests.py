@@ -35,7 +35,7 @@ def test_recommendations_flow():
         "recipient_age": 25,
         "occasion": "Birthday",
         "relationship": "Friend",
-        "budget": 100.0,
+        "budget": 400.0,
         "interests": ["music", "wireless"]
     }
     response = client.post("/recommendations", json=payload)
@@ -46,6 +46,15 @@ def test_recommendations_flow():
     
     if len(data) > 0:
         top_pick = data[0]
+        # Schema correctness
+        assert "id" in top_pick
+        assert "title" in top_pick
+        assert "price" in top_pick
         assert "score" in top_pick
         assert "reason" in top_pick
+        assert "image_url" in top_pick
+        assert "url" in top_pick
+        # Budget enforcement
+        assert top_pick["price"] <= payload["budget"]
+        # Assignment compliance
         assert top_pick["score"] >= 10

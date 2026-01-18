@@ -77,7 +77,7 @@ def search_products(
 
     return results
 
-@app.post("/recommendations")
+@app.post("/recommendations", response_model=list[schemas.RecommendationItem])
 def get_recommendations(profile: schemas.RecommendationRequest, db: Session = Depends(get_db)):
     # Delegates complex logic to the service layer
     return services.get_recommendations(profile, db)

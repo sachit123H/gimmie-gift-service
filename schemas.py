@@ -1,6 +1,16 @@
+
 from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
+
+class RecommendationItem(BaseModel):
+    id: int
+    title: str
+    price: float
+    score: int
+    reason: str
+    image_url: str | None
+    url: str | None
 
 # IMPROVEMENT: Enforce valid event types using an Enum
 class EventType(str, Enum):

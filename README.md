@@ -68,3 +68,13 @@ The `/recommendations` endpoint uses a multi-factor weighted scoring system:
 **Search for Tech products under $50:**
 ```bash
 GET /search?category=Tech&maxPrice=50
+
+
+## 🧭How to Review This Project
+
+1. Run the backend and visit `/dashboard` to interact with search and recommendations.
+2. Use the UI to click products and generate real user events.
+3. Observe how event data influences future recommendations via the learning layer.
+4. Inspect `/recommendations/diagnostics` to understand ranking behavior.
+
+This project prioritizes clarity, explainability, and end-to-end validation over model complexity.

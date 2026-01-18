@@ -88,11 +88,15 @@
         // --- RECOMMENDATION LOGIC ---
         async function getRecommendations() {
             const interests = document.getElementById('recInterests').value.split(',').map(s => s.trim());
+            // FIX: Check if the box is actually empty string ""
+            const budgetInput = document.getElementById('recBudget').value;
+            const budget = budgetInput === "" ? 1000 : parseFloat(budgetInput);
+
             const payload = {
-                recipient_age: 25, // Defaulting for UI simplicity
+                recipient_age: 25, 
                 occasion: document.getElementById('recOccasion').value,
                 relationship: document.getElementById('recRelationship').value,
-                budget: parseFloat(document.getElementById('recBudget').value) || 1000,
+                budget: budget, // Uses our fixed logic
                 interests: interests.length > 0 && interests[0] !== "" ? interests : ["general"]
             };
 
