@@ -4,11 +4,12 @@ A production-ready backend service that ingests product data, allows searching/f
 
 ## 🚀 Features
 
-* **Product Ingestion:** Automatic seeding of 50+ products into PostgreSQL.
+* **Product Ingestion:** Automatic seeding of 50 products into PostgreSQL.
 * **Smart Search:** Filter by category, retailer, price, and text search (title/desc/tags).
 * **Recommendation Engine:** Weighted scoring algorithm (+10 for interest match, +5 for occasion match, +2 for relationship).
 * **Event Tracking:** Logs user interactions (clicks/views) to build a "learning" dataset for future personalization.
 * **API Documentation:** Fully interactive Swagger UI.
+* **UI Dashboard:** A simple frontend to visualize search and recommendations interactively.
 
 ## 🛠 Tech Stack
 
@@ -50,7 +51,8 @@ A production-ready backend service that ingests product data, allows searching/f
     ```bash
     uvicorn main:app --reload
     ```
-    Access the API at: `http://127.0.0.1:8000/docs`
+    * Access the API at: `http://127.0.0.1:8000/docs`
+    * Access the Dashboard at: `http://127.0.0.1:8000/dashboard`
 
 ## 🧠 Ranking Logic
 
@@ -67,11 +69,13 @@ The `/recommendations` endpoint uses a multi-factor weighted scoring system:
 
 **Search for Tech products under $50:**
 ```bash
-curl "http://127.0.0.1:8000/search?category=Tech&maxPrice=50"
+curl "[http://127.0.0.1:8000/search?category=Tech&maxPrice=50](http://127.0.0.1:8000/search?category=Tech&maxPrice=50)" 
 ```
+
 **Get Recommendations:**
+
 ```bash
-curl -X POST "http://127.0.0.1:8000/recommendations" \
+curl -X POST "[http://127.0.0.1:8000/recommendations](http://127.0.0.1:8000/recommendations)" \
      -H "Content-Type: application/json" \
      -d '{
            "recipient_age": 25,
@@ -81,11 +85,27 @@ curl -X POST "http://127.0.0.1:8000/recommendations" \
            "interests": ["music", "tech"]
          }'
 ```
-## 🧭 How to Review This Project
-Run the backend and visit /dashboard to interact with search and recommendations.
+**🔮 Future Improvements & Tradeoffs**
 
-Use the UI to click products and generate real user events.
+While this MVP meets the core requirements, here is how I would approach scaling it for a production environment:
 
-Observe how event data influences future recommendations via the learning layer.
+1.  **Async "Learning" Layer (Tradeoff):**
+*  **Current State:* The system calculates trending categories in real-time during the recommendation request.
+*  **Scalability Issue:* As event data grows to millions of rows, summing these aggregates on every request will increase latency.
+*  **Improvement:* I would move the ``get_top_categories`` logic to a background job (using Celery or Redis) to pre-calculate trending tags periodically (e.g., every hour) rather than on every request.
 
-Inspect /recommendations/diagnostics to understand ranking behavior.
+2.  **Pagination:**
+*  The current search endpoint returns all matches. For a larger dataset, implementing cursor-based or offset-based pagination is essential to reduce payload size and improve frontend performance.
+
+3.  **Advanced Personalization:**
+* Currently, the learning layer applies a global boost based on general popularity. With a user authentication system, I would implement collaborative filtering to recommend products based on similar users' behaviors, rather than just global trends.
+
+4. **Infrastructure:**
+* Containerize the application using Docker and deploy to an auto-scaling environment (like AWS ECS or Kubernetes) to handle variable traffic loads.
+
+**🧭 How to Review This Project**
+
+1. **Run the Server:** Follow the setup instructions above.with search and recommendations.
+2. **Use the Dashboard:** Visit ``/dashboard`` to interact with search and recommendations visually.
+3. **Generate Events:** Click on products in the dashboard to generate real user events.
+4. **Observe Learning:** Inspect ``/recommendations/diagnostics`` to see how your interactions influence the "Trending Category" logic.
