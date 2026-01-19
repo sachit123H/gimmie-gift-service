@@ -90,9 +90,9 @@ curl -X POST "[http://127.0.0.1:8000/recommendations](http://127.0.0.1:8000/reco
 While this MVP meets the core requirements, here is how I would approach scaling it for a production environment:
 
 1.  **Async "Learning" Layer (Tradeoff):**
-*  **Current State:* The system calculates trending categories in real-time during the recommendation request.
-*  **Scalability Issue:* As event data grows to millions of rows, summing these aggregates on every request will increase latency.
-*  **Improvement:* I would move the ``get_top_categories`` logic to a background job (using Celery or Redis) to pre-calculate trending tags periodically (e.g., every hour) rather than on every request.
+*  *Current State:* The system calculates trending categories in real-time during the recommendation request.
+*  *Scalability Issue:* As event data grows to millions of rows, summing these aggregates on every request will increase latency.
+*  *Improvement:* I would move the ``get_top_categories`` logic to a background job (using Celery or Redis) to pre-calculate trending tags periodically (e.g., every hour) rather than on every request.
 
 2.  **Pagination:**
 *  The current search endpoint returns all matches. For a larger dataset, implementing cursor-based or offset-based pagination is essential to reduce payload size and improve frontend performance.
