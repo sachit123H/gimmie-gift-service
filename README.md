@@ -67,14 +67,25 @@ The `/recommendations` endpoint uses a multi-factor weighted scoring system:
 
 **Search for Tech products under $50:**
 ```bash
-GET /search?category=Tech&maxPrice=50
+curl "http://127.0.0.1:8000/search?category=Tech&maxPrice=50"
+```
+**Get Recommendations:**
+```bash
+curl -X POST "http://127.0.0.1:8000/recommendations" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "recipient_age": 25,
+           "occasion": "Birthday",
+           "relationship": "Friend",
+           "budget": 50,
+           "interests": ["music", "tech"]
+         }'
+```
+## 🧭 How to Review This Project
+Run the backend and visit /dashboard to interact with search and recommendations.
 
+Use the UI to click products and generate real user events.
 
-## 🧭How to Review This Project
+Observe how event data influences future recommendations via the learning layer.
 
-1. Run the backend and visit `/dashboard` to interact with search and recommendations.
-2. Use the UI to click products and generate real user events.
-3. Observe how event data influences future recommendations via the learning layer.
-4. Inspect `/recommendations/diagnostics` to understand ranking behavior.
-
-This project prioritizes clarity, explainability, and end-to-end validation over model complexity.
+Inspect /recommendations/diagnostics to understand ranking behavior.
